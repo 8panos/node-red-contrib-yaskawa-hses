@@ -1,0 +1,202 @@
+<!--
+  Yaskawa HSES Node Configuration HTML
+  
+  This file defines the visual configuration interface for the Node-RED nodes
+-->
+
+<!-- Configuration Node -->
+<script type="text/x-red" data-template-name="yaskawa-hses-config">
+    <div class="form-row">
+        <label for="node-config-input-name"><i class="icon-tag"></i> 名称</label>
+        <input type="text" id="node-config-input-name" placeholder="名称">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-host"><i class="icon-globe"></i> 机器人 IP</label>
+        <input type="text" id="node-config-input-host" placeholder="192.168.1.100">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-port"><i class="icon-random"></i> HSES 端口</label>
+        <input type="number" id="node-config-input-port" placeholder="10040">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-localPort"><i class="icon-random"></i> 本地端口</label>
+        <input type="number" id="node-config-input-localPort" placeholder="0 (自动)">
+    </div>
+</script>
+
+<script type="text/x-red" data-help-name="yaskawa-hses-config">
+    <p>安川机器人 HSES UDP 通讯配置</p>
+    <h3>配置参数</h3>
+    <dl class="message-properties">
+        <dt>机器人 IP <span class="property-type">string</span></dt>
+        <dd>安川机器人的 IP 地址</dd>
+        <dt>HSES 端口 <span class="property-type">number</span></dt>
+        <dd>HSES 协议端口，默认 10040</dd>
+        <dt>本地端口 <span class="property-type">number</span></dt>
+        <dd>本地 UDP 端口，0 表示自动分配</dd>
+    </dl>
+</script>
+
+<script type="text/javascript">
+    RED.nodes.registerType('yaskawa-hses-config', {
+        category: 'config',
+        defaults: {
+            name: { value: '' },
+            host: { value: '192.168.1.100', required: true },
+            port: { value: 10040, required: true },
+            localPort: { value: 0 }
+        },
+        label: function() {
+            return this.name || this.host + ':' + this.port;
+        },
+        oneditprepare: function() {
+            // 可以在这里添加动态验证
+        }
+    });
+</script>
+
+<!-- Main Communication Node -->
+<script type="text/x-red" data-template-name="yaskawa-hses">
+    <div class="form-row">
+        <label for="node-input-name"><i class="icon-tag"></i> 名称</label>
+        <input type="text" id="node-input-name" placeholder="名称">
+    </div>
+    <div class="form-row">
+        <label for="node-input-config"><i class="icon-bookmark"></i> 配置</label>
+        <input type="text" id="node-input-config">
+    </div>
+    <div class="form-row">
+        <label for="node-input-operation"><i class="icon-wrench"></i> 操作</label>
+        <select id="node-input-operation" style="width:70%">
+            <option value="read">读取变量</option>
+            <option value="write">写入变量</option>
+            <option value="readposition">读取位置</option>
+            <option value="readio">读取 IO</option>
+            <option value="writeio">写入 IO</option>
+            <option value="status">读取状态</option>
+            <option value="connect">连接</option>
+            <option value="disconnect">断开连接</option>
+        </select>
+    </div>
+    <div class="form-row" id="variable-type-row">
+        <label for="node-input-variableType"><i class="icon-list"></i> 变量类型</label>
+        <select id="node-input-variableType" style="width:70%">
+            <option value="B">B (位变量)</option>
+            <option value="I">I (整型)</option>
+            <option value="D">D (双字)</option>
+            <option value="R">R (浮点)</option>
+        </select>
+    </div>
+    <div class="form-row" id="address-row">
+        <label for="node-input-address"><i class="icon-list-alt"></i> 地址</label>
+        <input type="number" id="node-input-address" placeholder="0">
+    </div>
+    <div class="form-row">
+        <label for="node-input-timeout"><i class="icon-time"></i> 超时(ms)</label>
+        <input type="number" id="node-input-timeout" placeholder="5000">
+    </div>
+    <div class="form-row">
+        <label>&nbsp;</label>
+        <input type="checkbox" id="node-input-autoConnect" style="display:inline-block; width:auto; vertical-align:top;">
+        <label for="node-input-autoConnect" style="width:auto">启动时自动连接</label>
+    </div>
+</script>
+
+<script type="text/x-red" data-help-name="yaskawa-hses">
+    <p>安川机器人 HSES UDP 通讯节点</p>
+    
+    <h3>功能说明</h3>
+    <p>该节点用于通过 HSES UDP 协议与安川机器人进行高速通讯，支持读写 B/I/D/R 变量、读取机器人位置、IO 控制和状态监视。</p>
+    
+    <h3>输入</h3>
+    <dl class="message-properties">
+        <dt class="optional">topic <span class="property-type">string</span></dt>
+        <dd>操作类型，覆盖节点配置。可选值：read, write, readposition, readio, writeio, status, connect, disconnect</dd>
+        <dt class="optional">variableType <span class="property-type">string</span></dt>
+        <dd>变量类型，覆盖节点配置。可选值：B, I, D, R</dd>
+        <dt class="optional">address <span class="property-type">number</span></dt>
+        <dd>变量地址，覆盖节点配置</dd>
+        <dt class="optional">count <span class="property-type">number</span></dt>
+        <dd>读取数量，默认为 1</dd>
+        <dt class="optional">payload <span class="property-type">array|number</span></dt>
+        <dd>写入的数据值（写入操作时使用）</dd>
+    </dl>
+    
+    <h3>输出</h3>
+    <dl class="message-properties">
+        <dt>payload <span class="property-type">object</span></dt>
+        <dd>操作结果，包含 success、values、error 等字段</dd>
+        <dt>stats <span class="property-type">object</span></dt>
+        <dd>通讯统计信息</dd>
+    </dl>
+    
+    <h3>操作类型</h3>
+    <ul>
+        <li><b>读取变量</b> - 读取 B/I/D/R 变量</li>
+        <li><b>写入变量</b> - 写入 B/I/D/R 变量</li>
+        <li><b>读取位置</b> - 读取机器人当前位置 (X, Y, Z, RX, RY, RZ)</li>
+        <li><b>读取 IO</b> - 读取 IO 状态</li>
+        <li><b>写入 IO</b> - 写入 IO 值</li>
+        <li><b>读取状态</b> - 读取机器人运行状态</li>
+        <li><b>连接/断开</b> - 手动控制连接状态</li>
+    </ul>
+    
+    <h3>示例</h3>
+    <p>读取 B 变量 #100:</p>
+    <pre>msg.topic = "read";
+msg.variableType = "B";
+msg.address = 100;
+return msg;</pre>
+    
+    <p>写入 I 变量 #200 值为 1234:</p>
+    <pre>msg.topic = "write";
+msg.variableType = "I";
+msg.address = 200;
+msg.payload = 1234;
+return msg;</pre>
+    
+    <p>读取机器人位置:</p>
+    <pre>msg.topic = "readposition";
+return msg;</pre>
+</script>
+
+<script type="text/javascript">
+    RED.nodes.registerType('yaskawa-hses', {
+        category: 'industrial',
+        color: '#C0DEED',
+        defaults: {
+            name: { value: '' },
+            config: { type: 'yaskawa-hses-config', required: true },
+            operation: { value: 'read', required: true },
+            variableType: { value: 'B' },
+            address: { value: 0, validate: RED.validators.number() },
+            timeout: { value: 5000, validate: RED.validators.number() },
+            autoConnect: { value: true }
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: 'yaskawa.png',
+        label: function() {
+            return this.name || 'Yaskawa HSES';
+        },
+        labelStyle: function() {
+            return this.name ? 'node_label_italic' : '';
+        },
+        oneditprepare: function() {
+            var node = this;
+            
+            // Show/hide fields based on operation
+            function updateVisibility() {
+                var op = $('#node-input-operation').val();
+                var showVariable = ['read', 'write'].includes(op);
+                var showAddress = ['read', 'write', 'readio', 'writeio'].includes(op);
+                
+                $('#variable-type-row').toggle(showVariable);
+                $('#address-row').toggle(showAddress);
+            }
+            
+            $('#node-input-operation').change(updateVisibility);
+            updateVisibility();
+        }
+    });
+</script>

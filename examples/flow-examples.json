@@ -1,0 +1,300 @@
+[
+    {
+        "id": "tab1",
+        "type": "tab",
+        "label": "安川机器人示例",
+        "disabled": false,
+        "info": "Yaskawa HSES 通讯示例流程"
+    },
+    {
+        "id": "config1",
+        "type": "yaskawa-hses-config",
+        "z": "tab1",
+        "name": "安川机器人配置",
+        "host": "192.168.1.100",
+        "port": "10040",
+        "localPort": "0"
+    },
+    {
+        "id": "inject1",
+        "type": "inject",
+        "z": "tab1",
+        "name": "读取 B 变量",
+        "props": [
+            {
+                "p": "topic",
+                "v": "read",
+                "vt": "str"
+            },
+            {
+                "p": "variableType",
+                "v": "B",
+                "vt": "str"
+            },
+            {
+                "p": "address",
+                "v": "100",
+                "vt": "num"
+            },
+            {
+                "p": "count",
+                "v": "5",
+                "vt": "num"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 150,
+        "y": 100,
+        "wires": [["yaskawa1"]]
+    },
+    {
+        "id": "inject2",
+        "type": "inject",
+        "z": "tab1",
+        "name": "写入 I 变量",
+        "props": [
+            {
+                "p": "topic",
+                "v": "write",
+                "vt": "str"
+            },
+            {
+                "p": "variableType",
+                "v": "I",
+                "vt": "str"
+            },
+            {
+                "p": "address",
+                "v": "200",
+                "vt": "num"
+            },
+            {
+                "p": "payload",
+                "v": "1234",
+                "vt": "num"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 150,
+        "y": 160,
+        "wires": [["yaskawa1"]]
+    },
+    {
+        "id": "inject3",
+        "type": "inject",
+        "z": "tab1",
+        "name": "读取位置",
+        "props": [
+            {
+                "p": "topic",
+                "v": "readposition",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 150,
+        "y": 220,
+        "wires": [["yaskawa1"]]
+    },
+    {
+        "id": "inject4",
+        "type": "inject",
+        "z": "tab1",
+        "name": "读取状态",
+        "props": [
+            {
+                "p": "topic",
+                "v": "status",
+                "vt": "str"
+            }
+        ],
+        "repeat": "5",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 150,
+        "y": 280,
+        "wires": [["yaskawa1"]]
+    },
+    {
+        "id": "yaskawa1",
+        "type": "yaskawa-hses",
+        "z": "tab1",
+        "name": "安川通讯",
+        "config": "config1",
+        "operation": "read",
+        "variableType": "B",
+        "address": "0",
+        "timeout": "5000",
+        "autoConnect": true,
+        "x": 400,
+        "y": 180,
+        "wires": [["debug1", "function1"]]
+    },
+    {
+        "id": "debug1",
+        "type": "debug",
+        "z": "tab1",
+        "name": "调试输出",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 650,
+        "y": 100,
+        "wires": []
+    },
+    {
+        "id": "function1",
+        "type": "function",
+        "z": "tab1",
+        "name": "处理结果",
+        "func": "// 处理安川通讯结果\nif (msg.payload.success) {\n    if (msg.payload.position) {\n        // 位置数据\n        node.warn(`位置: X=${msg.payload.position.x}, Y=${msg.payload.position.y}, Z=${msg.payload.position.z}`);\n    } else if (msg.payload.status) {\n        // 状态数据\n        node.warn(`状态: 运行=${msg.payload.status.running}, 伺服=${msg.payload.status.servoOn}`);\n    } else if (msg.payload.values) {\n        // 变量数据\n        node.warn(`变量值: ${JSON.stringify(msg.payload.values)}`);\n    }\n} else {\n    node.error(`通讯失败: ${msg.payload.error}`);\n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 650,
+        "y": 200,
+        "wires": [["ui1"]]
+    },
+    {
+        "id": "ui1",
+        "type": "ui_text",
+        "z": "tab1",
+        "group": "ui_group1",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "name": "机器人状态",
+        "label": "状态",
+        "format": "{{msg.payload}}",
+        "layout": "row-spread",
+        "className": "",
+        "x": 880,
+        "y": 200,
+        "wires": []
+    },
+    {
+        "id": "inject5",
+        "type": "inject",
+        "z": "tab1",
+        "name": "读取 IO",
+        "props": [
+            {
+                "p": "topic",
+                "v": "readio",
+                "vt": "str"
+            },
+            {
+                "p": "address",
+                "v": "1",
+                "vt": "num"
+            },
+            {
+                "p": "count",
+                "v": "8",
+                "vt": "num"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 150,
+        "y": 340,
+        "wires": [["yaskawa1"]]
+    },
+    {
+        "id": "inject6",
+        "type": "inject",
+        "z": "tab1",
+        "name": "写入 IO",
+        "props": [
+            {
+                "p": "topic",
+                "v": "writeio",
+                "vt": "str"
+            },
+            {
+                "p": "address",
+                "v": "1",
+                "vt": "num"
+            },
+            {
+                "p": "payload",
+                "v": "[1,0,1,0,1,0,1,0]",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 150,
+        "y": 400,
+        "wires": [["yaskawa1"]]
+    },
+    {
+        "id": "inject7",
+        "type": "inject",
+        "z": "tab1",
+        "name": "连接",
+        "props": [
+            {
+                "p": "topic",
+                "v": "connect",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 150,
+        "y": 460,
+        "wires": [["yaskawa1"]]
+    },
+    {
+        "id": "inject8",
+        "type": "inject",
+        "z": "tab1",
+        "name": "断开",
+        "props": [
+            {
+                "p": "topic",
+                "v": "disconnect",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 150,
+        "y": 520,
+        "wires": [["yaskawa1"]]
+    }
+]
