@@ -160,7 +160,7 @@ module.exports = function(RED) {
         },
         inputs: 1,
         outputs: 1,
-        icon: 'yaskawa.png',
+        icon: 'font-awesome/fa-robot',
         label: function() {
             return this.name || 'Yaskawa HSES';
         },

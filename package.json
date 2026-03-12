@@ -20,7 +20,7 @@
   "node-red": {
     "version": ">=3.0.0",
     "nodes": {
-      "yaskawa-hses": "nodes/yaskawa-hses.js",
+      "yaskawa-hses": "nodes/yaskawa-hses-node.js",
       "yaskawa-hses-config": "nodes/yaskawa-hses-config.js"
     }
   },
